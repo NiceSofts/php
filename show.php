@@ -1,1320 +1,653 @@
 <?php
-/** nicetheme: +1s **/
-if (!defined('ABSPATH')) {
-    exit;
+/*
+mobantu.com
+qq 82708210
+*/
+if ( !defined('ABSPATH') ) {exit;}
+
+function erphpdown_metaboxs() {
+	$erphp_down_default = get_option('erphp_down_default');
+	$member_down_default = get_option('member_down_default');
+	$down_price_default = get_option('down_price_default');
+	$down_price_type_default = get_option('down_price_type_default');
+	$down_days_default = get_option('down_days_default');
+
+	$meta_boxes = array(
+		array(
+			"name"             => "erphp_down",
+			"title"            => "收费模式",
+			"desc"             => "可以通过短代码<code>[erphpdown]隐藏内容[/erphpdown]</code>隐藏部分收费内容",
+			"type"             => "downradio",
+			"capability"       => "manage_options",
+			'default' => $erphp_down_default?$erphp_down_default:'4',
+		),
+		array(
+			"name"             => "member_down",
+			"title"            => "VIP优惠",
+			"desc"             => "专享指VIP免费、普通用户无法购买，专享购买指仅VIP可购买；高等级享有低等级的权限；没有说明VIP时长名称的优惠指所有VIP的优惠；可通过短代码<code>[vip]隐藏内容[/vip]</code>隐藏VIP内容",
+			"type"             => "vipradio",
+			'options' => array(
+				'1' => '无',
+	            '4' => '专享',
+	            '15' => '包季专享',
+	            '8' => '包年专享',
+	            '9' => '终身专享',
+	            '3' => '免费',
+	            '16' => '包季免费',
+	            '6' => '包年免费',
+	            '7' => '终身免费',
+	            '2' => '5折',
+	            '5' => '8折',
+	            '13' => '5折|终身免费',
+	            '14' => '8折|终身免费',
+	            '10' => '专享购买',
+	            '11' => '专享购买|包年5折',
+	            '12' => '专享购买|包年8折'
+	        ),
+	        'default' => $member_down_default?$member_down_default:'1',
+			"capability"       => "manage_options"
+		)
+	);
+
+	if(!get_option('erphp_metabox_mini')){
+		$meta_boxes[] = array(
+			"name"             => "down_price_type",
+			"title"            => "价格类型",
+			"desc"             => "多价格类型暂不支持免登录、查看模式",
+			"type"             => "typeradio",
+			'options' => array(
+				'0' => '单价格',
+	            '1' => '多价格'
+	        ),
+	        'default' => $down_price_type_default?$down_price_type_default:'0',
+			"capability"       => "manage_options"
+		);
+	}
+
+	$meta_boxes[] = array(
+		"name"             => "down_price",
+		"title"            => "收费价格",
+		"desc"             => "除VIP专享外，其他必须大于0，否则视为全网免费资源；免登录模式时单位为元",
+		"type"             => "erphpnumber",
+		'default'          => $down_price_default?$down_price_default:'0',
+		'required'         => '1',
+		"capability"       => "manage_options"
+	);
+
+	$meta_boxes[] = array(
+		"name"             => "down_url",
+		"title"            => "下载地址",
+		"desc"             => "",
+		"type"             => "erphptextarea",
+		"capability"       => "manage_options"
+	);
+    $meta_boxes[] = array(
+        "name"             => "down_desc",
+        "title"            => "描述",
+        "desc"             => "在这里输入描述",
+        "type"             => "erphptextarea",
+        "capability"       => "manage_options"
+    );
+
+	if(!get_option('erphp_metabox_mini')){
+		$meta_boxes[] = array(
+			"name"             => "down_urls",
+			"title"            => "下载地址",
+			"desc"             => "",
+			"type"             => "erphptextareas",
+			"capability"       => "manage_options"
+		);
+
+		$meta_boxes[] = array(
+			"name"             => "down_url_free",
+			"title"            => "免费下载地址",
+			"desc"             => "与上面的收费下载地址可同时存在，用户不用登录就能免费下载的地址，不记录下载次数，无任何限制，可被爬虫采集，慎用；格式与上面一致",
+			"type"             => "textarea",
+			"capability"       => "manage_options"
+		);
+	}
+
+	$meta_boxes[] = array(
+		"name"             => "hidden_content",
+		"title"            => "隐藏内容",
+		"desc"             => "收费下载模式的隐藏内容，一般填提取码或者解压密码。格式化的格式为<code>提取码：xxxx，解压密码：oooo</code>或<code>提取码：oooo</code>，注意是中文冒号与逗号",
+		"type"             => "text",
+		"default"          => "",
+		"capability"       => "manage_options"
+	);
+
+	if(!get_option('erphp_metabox_mini')){
+		$meta_boxes[] = array(
+			"name"             => "down_days",
+			"title"            => "过期天数",
+			"desc"             => "留空或0则表示一次购买永久下载，设置一个大于0的数字比如30，则表示购买30天后得重新购买",
+			"type"             => "number",
+			'default'          => $down_days_default?$down_days_default:'0',
+			"required"         => "0",
+			"capability"       => "manage_options"
+		);
+
+		$meta_boxes[] = array(
+			"name"             => "down_repeat",
+			"title"            => "重复购买",
+			"desc"             => "可重复购买多次，仅限登录状态的下载模式",
+			"type"             => "checkbox",
+			"capability"       => "manage_options"
+		);
+
+		$meta_boxes[] = array(
+			"name"             => "down_box_hide",
+			"title"            => "隐藏购买框",
+			"desc"             => "隐藏默认添加到文章内容底部的购买框，你可以通过短代码<code>[box]</code>在文章任意地方显示购买框，仅适用于下载、免登录模式",
+			"type"             => "checkbox",
+			"capability"       => "manage_options"
+		);
+
+		$meta_boxes[] = array(
+			"name"             => "down_only_pay",
+			"title"            => "仅在线支付",
+			"desc"             => "不可使用余额购买，请确保 1.erphpdown-基础设置 开启 直接支付购买，2.有配置可用的在线支付接口",
+			"type"             => "checkbox",
+			"capability"       => "manage_options"
+		);
+	}
+
+	if(plugin_check_activation()){
+		$meta_boxes[] = array(
+			"name"             => "down_activation",
+			"title"            => "激活码发放",
+			"desc"             => "需要配置好smtp发邮件功能，激活码会在用户购买后自动发送到用户邮箱",
+			"type"             => "checkbox",
+			"capability"       => "manage_options"
+		);
+	}
+
+	return $meta_boxes;
 }
 
-    global $wpdb;
+function erphpdown_show_metabox() {
+	global $post;
+	$meta_boxes = erphpdown_metaboxs();
+?>
+	<style>
+	.erphpdown-metabox-item{padding-left:100px;position:relative;margin:1em 0}
+	.erphpdown-metabox-item-pricetype1{display:none}
+	.erphpdown-metabox-item label.title{position:absolute;left:0;top:0;display:inline-block;font-weight:bold;width:100px;vertical-align:top}
+	.down-urls{position: relative;}
+	.down-urls .down-url{margin-bottom: 5px;border: 1px dashed #ccc;padding: 5px;border-radius: 5px;position: relative;}
+	.down-urls .down-url input, .down-urls .down-url select, .down-urls .down-url .del-down-url {vertical-align: top;}
+	</style>
+<?php
+	foreach ( $meta_boxes as $meta ) :
+		$value = get_post_meta( $post->ID, $meta['name'], true );
+		if ( $meta['type'] == 'text' )
+			erphpdown_show_text( $meta, $value );
+		elseif ( $meta['type'] == 'erphpnumber' )
+			erphpdown_show_erphpnumber( $meta, $value );
+		elseif ( $meta['type'] == 'number' )
+			erphpdown_show_number( $meta, $value );
+		elseif ( $meta['type'] == 'textarea' )
+			erphpdown_show_textarea( $meta, $value );
+		elseif ( $meta['type'] == 'erphptextarea' )
+			erphpdown_show_erphptextarea( $meta, $value );
+		elseif ( $meta['type'] == 'erphptextareas' )
+			erphpdown_show_erphptextareas( $meta, $value );
+		elseif ( $meta['type'] == 'checkbox' )
+			erphpdown_show_checkbox( $meta, $value );
+		elseif ( $meta['type'] == 'downradio' )
+			erphpdown_show_downradio( $meta, $value );
+		elseif ($meta['type'] == 'vipradio')
+			erphpdown_show_vipradio( $meta, $value );
+		elseif ($meta['type'] == 'typeradio')
+			erphpdown_show_typeradio( $meta, $value );
+	endforeach;
+?>
+	<fieldset style="border:1px solid #ccc;padding:5px 8px;border-radius: 4px;display: none;"><legend>短代码使用指南</legend>- 收费隐藏短代码 <code>[erphpdown]部分隐藏内容[/erphpdown]</code>，多价格类型不建议使用短代码；<br>- VIP专属隐藏短代码 <code>[vip type=6]VIP内容[/vip]</code>（type选填，可为6、7、8、9、10，分别对应五种VIP）；<br>- 自定义位置的购买下载框短代码 <code>[box]</code>，仅对下载模式有效。</fieldset>
+	<script>
+		jQuery(function(){
+			if(jQuery("input[name='erphp_down'].nologin").is(":checked")){
+				jQuery("input[name='member_down'].login").parent().hide();
+			}
+			if(jQuery("input[name='erphp_down'].novip").is(":checked")){
+				jQuery("input[name='member_down'].vip").parent().hide();
+			}
+			if(jQuery("input[name='erphp_down'].noprice").is(":checked")){
+				jQuery("input[name='down_price_type'].pricetype1").parent().hide();
+			}
+		});
+		jQuery("input[name='erphp_down']").click(function(){
+			if(jQuery(this).hasClass("nologin")){
+				jQuery("input[name='member_down'].login").parent().hide();
+			}else{
+				jQuery("input[name='member_down'].login").parent().show();
+			}
 
-    $down_box_hide = get_field( 'down_box_hide' )?: array();
+			if(jQuery(this).hasClass("novip")){
+				jQuery("input[name='member_down'].vip").parent().hide();
+			}else{
+				jQuery("input[name='member_down'].vip").parent().show();
+			}
 
-/*$content .= in_array('true', $down_box_hide) ? 'd-xl-inline-block ' : 'd-xl-none ';
+			if(jQuery(this).hasClass("noprice")){
+				jQuery("input[name='down_price_type'].pricetype1").parent().hide();
+			}else{
+				jQuery("input[name='down_price_type'].pricetype1").parent().show();
+			}
+		});
 
-return $content;*/
+		jQuery(function(){
+			if(jQuery("input[name='down_price_type'].pricetype1").is(":checked")){
+				jQuery(".erphpdown-metabox-item-pricetype0").hide();
+				jQuery(".erphpdown-metabox-item-pricetype1").show();
+			}
+		});
+		jQuery("input[name='down_price_type']").click(function(){
+			if(jQuery(this).hasClass("pricetype1")){
+				jQuery(".erphpdown-metabox-item-pricetype0").hide();
+				jQuery(".erphpdown-metabox-item-pricetype1").show();
+			}else{
+				jQuery(".erphpdown-metabox-item-pricetype1").hide();
+				jQuery(".erphpdown-metabox-item-pricetype0").show();
+			}
+		});
+	</script>
+<?php
+}
 
-    if (!in_array('true', $down_box_hide)) {
+function erphpdown_show_typeradio( $args = array(), $value = false ) {
+	global $pagenow;
+	extract( $args ); ?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<?php
+			$i=1;
+            foreach ($options as $key => $option) {
+            	if($pagenow === 'post-new.php') $value=$default;
+            	else{if($value == null) $value = 0;}
 
-        $erphp_post_types = get_option('erphp_post_types');
-
-        if (is_singular() && in_array(get_post_type(), $erphp_post_types)) {
-
-            $content2 = $content;
-
-            $erphp_see2_style = get_option('erphp_see2_style');
-            $erphp_life_name = get_option('erphp_life_name') ? get_option('erphp_life_name') : '终身VIP';
-            $erphp_year_name = get_option('erphp_year_name') ? get_option('erphp_year_name') : '包年VIP';
-            $erphp_quarter_name = get_option('erphp_quarter_name') ? get_option('erphp_quarter_name') : '包季VIP';
-            $erphp_month_name = get_option('erphp_month_name') ? get_option('erphp_month_name') : '包月VIP';
-            $erphp_day_name = get_option('erphp_day_name') ? get_option('erphp_day_name') : '体验VIP';
-            $erphp_vip_name = get_option('erphp_vip_name') ? get_option('erphp_vip_name') : 'VIP';
-
-            $erphp_down = get_field('erphp_down');
-
-            /*$start_down = get_post_meta(get_the_ID(), 'start_down', true);*/
-            $start_down = ($erphp_down == 1) ? true : false;
-            $start_down2 = ($erphp_down == 5) ? true : false;
-            $start_see = ($erphp_down == 2) ? true : false;
-            $start_see2 = ($erphp_down == 3) ? true : false;
-
-            $days = get_field('down_days');
-            $price = get_field('down_price');
-            $price_type = get_field('down_price_type');
-
-
-
-            $url = get_field('down_url');
-            $urls = get_field( 'down_urls' );
-            /*            $urls = get_post_meta(get_the_ID(), 'down_urls', true);*/
-            $url_free = get_field( 'down_url_free' );
-            $memberDown = get_field( 'member_down' );
-
-            $hidden = get_field( 'hidden_content' );
-
-            $userType = getUsreMemberType();
-            $down_info = null;
-            $downMsgFree = '';
-            $down_checkpan = '';
-            $yituan = '';
-            $down_tuan = 0;
-            $erphp_popdown = '';
-            $iframe = '';
-            $down_repeat = 0;
-            $down_info_repeat = null;
-
-            if (function_exists('erphpdown_tuan_install')) {
-                $down_tuan = get_post_meta(get_the_ID(), 'down_tuan', true);
+            	if($key == 1){$class="pricetype1";}else{$class="";}
+                echo '<span><input type="radio" name="'.$name.'" id="'.$name.$i.'" value="'. esc_attr( $key ) . '" '. checked( $value, $key, false) .' class="'.$class.'"/><label for="'.$name.$i.'">' . esc_html( $option ) . '</label>&nbsp;&nbsp;&nbsp;&nbsp;</span>';
+                $i ++;
             }
+        ?>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            $down_repeat = get_post_meta(get_the_ID(), 'down_repeat', true);
-
-            $erphp_url_front_vip = get_bloginfo('wpurl') . '/wp-admin/admin.php?page=erphpdown/admin/erphp-update-vip.php';
-            if (get_option('erphp_url_front_vip')) {
-                $erphp_url_front_vip = get_option('erphp_url_front_vip');
+function erphpdown_show_vipradio( $args = array(), $value = false ) {
+	extract( $args ); ?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<?php
+			$i=1;
+            foreach ($options as $key => $option) {
+            	if(!$value) $value=$default;
+            	if($key != 1 && $key != 3 && $key != 16 && $key != 6 && $key != 7){$class="login";}else{$class="";}
+            	if($key != 1){$class .= " vip";}
+                echo '<span><input type="radio" name="'.$name.'" id="'.$name.$i.'" value="'. esc_attr( $key ) . '" '. checked( $value, $key, false) .' class="'.$class.'"/><label for="'.$name.$i.'">' . esc_html( $option ) . '</label>&nbsp;&nbsp;</span>';
+                $i ++;
             }
-            $erphp_url_front_login = wp_login_url();
-            if (get_option('erphp_url_front_login')) {
-                $erphp_url_front_login = get_option('erphp_url_front_login');
-            }
+        ?>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            if (get_option('erphp_popdown')) {
-                $erphp_popdown = ' erphpdown-down-layui';
-                $iframe = '&iframe=1';
-            }
+function erphpdown_show_text( $args = array(), $value = false ) {
+	global $pagenow;
+	extract( $args ); if($pagenow == 'post-new.php'){ if(!$value) $value=$default; }?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<input type="text" name="<?php echo $name; ?>" id="<?php echo $name; ?>" value="<?php echo esc_html( $value, 1 ); ?>" style="width: 100%;" />
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            if (is_user_logged_in()) {
-                $erphp_url_front_vip2 = $erphp_url_front_vip;
-            } else {
-                $erphp_url_front_vip2 = $erphp_url_front_login;
-            }
+function erphpdown_show_erphpnumber( $args = array(), $value = false ) {
+	extract( $args ); if(!$value) $value=$default; ?>
+	<div class="erphpdown-metabox-item erphpdown-metabox-item-pricetype0">
+		<label class="title"><?php echo $title; ?></label>
+		<input type="number" min="0" step="0.01" name="<?php echo $name; ?>" id="<?php echo $name; ?>" value="<?php echo esc_html( $value, 1 ); ?>" style="width: 100px;" <?php if($required) echo 'required';?>/>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            $erphp_blank_domains = get_option('erphp_blank_domains') ? get_option('erphp_blank_domains') : 'pan.baidu.com';
-            $erphp_colon_domains = get_option('erphp_colon_domains') ? get_option('erphp_colon_domains') : 'pan.baidu.com';
+function erphpdown_show_number( $args = array(), $value = false ) {
+	extract( $args ); if(!$value) $value=$default; ?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<input type="number" min="0" step="1" name="<?php echo $name; ?>" id="<?php echo $name; ?>" value="<?php echo esc_html( $value, 1 ); ?>" style="width: 100px;" <?php if($required) echo 'required';?>/>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            if ($down_tuan && is_user_logged_in()) {
-                global $current_user;
-                $yituan = $wpdb->get_var("select ice_status from $wpdb->tuanorder where ice_user_id=" . $current_user->ID . " and ice_post=" . get_the_ID() . " and ice_status>0");
-            }
+function erphpdown_show_textarea( $args = array(), $value = false ) {
+	extract( $args ); ?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<textarea name="<?php echo $name; ?>" id="<?php echo $name; ?>" cols="60" rows="4" tabindex="30" style="width: 100%;"><?php echo esc_html( $value, 1 ); ?></textarea>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+	<?php
+}
 
-            if ($url_free) {
-                $downMsgFree .= '<div class="h4 mb-3">免费资源</div><div class="erphpdown-free">';
-                $downList = explode("\r\n", $url_free);
-                foreach ($downList as $k => $v) {
-                    $filepath = $downList[$k];
-                    if ($filepath) {
+function erphpdown_show_erphptextarea( $args = array(), $value = false ) {
+	extract( $args ); ?>
+	<div class="erphpdown-metabox-item erphpdown-metabox-item-pricetype0">
+		<label class="title"><?php echo $title; ?></label>
+		<textarea name="<?php echo $name; ?>" id="<?php echo $name; ?>" cols="60" rows="4" tabindex="30" style="width: 100%;"><?php echo esc_html( $value, 1 ); ?></textarea><a href="javascript:;" class="erphp-add-file button">上传媒体库文件</a> <a href="javascript:;" class="erphp-add-file2 button button-primary">上传本地文件</a> <span id="file-progress"></span>
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<br />
+		<p class="description">
+			收费查看模式不用填写，地址一行一个，可外链以及内链。地址格式可为以下任意一种：<a href="javascript:;" class="erphpshowtypes">点击显示格式</a><br>
+			<fieldset class="erphpurltypes" style="display: none;border:1px solid #ccc;padding:5px 8px;border-radius: 4px;"><legend>下载地址格式</legend><ol><li>/wp-content/uploads/moban-tu.zip</li><li>https://pan.baidu.com/test</li><li>某某地址,https://pan.baidu.com/test,提取码：2587</li><li>某某地址,https://pan.baidu.com/test</li><li>链接: https://pan.baidu.com/s/test 提取码: xxxx</li></ol>模板兔提示：1是内链，可加密下载地址；3与4格式用英文半角逗号隔开（名称,下载地址,提取码或解压密码），不能有空格；5是<b>网页版百度网盘</b>默认分享格式（名称 下载地址 提取码名称 提取码），英文空格分割</fieldset>
+		</p>
+		<script src="<?php echo ERPHPDOWN_URL;?>/static/jquery.form.js"></script>
+		<script>
+	        jQuery(function($) {
 
-                        if ($erphp_colon_domains) {
-                            $erphp_colon_domains_arr = explode(',', $erphp_colon_domains);
-                            foreach ($erphp_colon_domains_arr as $erphp_colon_domain) {
-                                if (strpos($filepath, $erphp_colon_domain)) {
-                                    $filepath = str_replace('：', ': ', $filepath);
-                                    break;
+                $(document).on('click', '.erphp-add-file', function(e) {
+                    e.preventDefault();
+                    var button = $(this);
+                    var id = button.prev();
+                    var original_send = wp.media.editor.send.attachment;
+                    wp.media.editor.send.attachment = function(props, attachment) {
+                        if($.trim(id.val()) != ''){
+							id.val(id.val()+'\n'+attachment.url);
+						}else{
+							id.val(attachment.url);
+						}
+						wp.media.editor.send.attachment = original_send;
+                    };
+                    wp.media.editor.open(button);
+                    return false;
+                });
+
+
+	            $(".erphpshowtypes").click(function(){
+	            	if($(this).hasClass('active')){
+	            		$(".erphpurltypes").hide();
+	            	}else{
+	            		$(".erphpurltypes").show();
+	            	}
+	            	$(this).toggleClass("active");
+	            });
+
+	            $(".erphp-add-file2").click(function(){
+                    $("body").append('<form style="display:none" id="erphpFileForm" action="<?php echo ERPHPDOWN_URL;?>/admin/action/file.php" enctype="multipart/form-data" method="post"><input type="file" id="erphpFile" name="erphpFile"></form>');
+                    $("#erphpFile").trigger('click');
+                    $("#erphpFile").change(function(){
+                        $("#erphpFileForm").ajaxSubmit({
+                            dataType:  'json',
+                            beforeSend: function() {
+
+                            },
+                            uploadProgress: function(event, position, total, percentComplete) {
+                                $('#file-progress').text(percentComplete+'%');
+                            },
+                            success: function(data) {
+                                $('#erphpFileForm').remove();
+                                var olddata = $('#<?php echo $name;?>').val();
+                                if($.trim(olddata)){
+                                	$('#<?php echo $name;?>').val(olddata+'\n'+data.link);
+                                }else{
+                                    $('#<?php echo $name;?>').val(data.link);
                                 }
+                            },
+                            error:function(xhr){
+                                $('#erphpFileForm').remove();
+                                alert('上传失败！');
                             }
-                        }
+                        });
 
-                        $erphp_blank_domain_is = 0;
-                        if ($erphp_blank_domains) {
-                            $erphp_blank_domains_arr = explode(',', $erphp_blank_domains);
-                            foreach ($erphp_blank_domains_arr as $erphp_blank_domain) {
-                                if (strpos($filepath, $erphp_blank_domain)) {
-                                    $erphp_blank_domain_is = 1;
-                                    break;
+                    });
+                    return false;
+                });
+
+	        });
+	    </script>
+	</div>
+	<?php
+}
+
+function erphpdown_show_erphptextareas( $args = array(), $value = false ) {
+	extract( $args );
+	?>
+	<div class="erphpdown-metabox-item erphpdown-metabox-item-pricetype1">
+		<label class="title"><?php echo $title; ?></label>
+		<div class="down-urls">
+			<?php
+				if($value){
+					$cnt = count($value['index']);
+            		if($cnt){
+            			for($i=0; $i<$cnt;$i++){
+            				echo '<div class="down-url">
+								<input type="number" min="1" step="1" name="down_urls[index][]" value="'.$value['index'][$i].'" placeholder="序号" style="width:8%" required>
+								<input type="text" name="down_urls[tag][]" value="'.$value['tag'][$i].'" placeholder="标签" style="width:8%" required>
+								<input type="text" name="down_urls[name][]" value="'.$value['name'][$i].'" placeholder="名称" style="width: 15%" required><input type="number" step="0.01" name="down_urls[price][]" value="'.$value['price'][$i].'" placeholder="价格" style="width: 10%"><div style="display: inline-block;width: 50%;"><textarea name="down_urls[url][]" placeholder="地址" style="width: 100%" rows="2">'.$value['url'][$i].'</textarea><a href="javascript:;" class="erphp-add-url button">上传媒体库文件</a> <a href="javascript:;" class="erphp-add-url2 button button-primary">上传本地文件</a> <span></span></div><select name="down_urls[vip][]" style="display:inline-block;"><option value="0">VIP默认优惠</option><option value="1" '.($value['vip'][$i] == '1'?'selected':'').'>无</option><option value="4" '.($value['vip'][$i] == '4'?'selected':'').'>VIP专享</option><option value="15" '.($value['vip'][$i] == '15'?'selected':'').'>包季VIP专享</option><option value="8" '.($value['vip'][$i] == '8'?'selected':'').'>年费VIP专享</option><option value="9" '.($value['vip'][$i] == '9'?'selected':'').'>终身VIP专享</option><option value="3" '.($value['vip'][$i] == '3'?'selected':'').'>VIP免费</option><option value="16" '.($value['vip'][$i] == '16'?'selected':'').'>包季VIP免费</option><option value="6" '.($value['vip'][$i] == '6'?'selected':'').'>年费VIP免费</option><option value="7" '.($value['vip'][$i] == '7'?'selected':'').'>终身VIP免费</option><option value="2" '.($value['vip'][$i] == '2'?'selected':'').'>VIP 5折</option><option value="5" '.($value['vip'][$i] == '5'?'selected':'').'>VIP 8折</option><option value="13" '.($value['vip'][$i] == '13'?'selected':'').'>VIP 5折|终身免费</option><option value="14" '.($value['vip'][$i] == '14'?'selected':'').'>VIP 8折|终身免费</option><option value="10" '.($value['vip'][$i] == '10'?'selected':'').'>VIP专享购买</option><option value="11" '.($value['vip'][$i] == '11'?'selected':'').'>专享购买|年费5折</option><option value="12" '.($value['vip'][$i] == '12'?'selected':'').'>专享购买|年费8折</option></select> <a href="javascript:;" class="del-down-url">删除</a>
+							</div>';
+            			}
+            		}
+				}
+			?>
+		</div>
+
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<p class="description">
+			<button class="button add-down-url" type="button">+ 添加地址</button> 序号确保每个唯一，地址一行一个，可外链以及内链。地址格式可为以下任意一种：<a href="javascript:;" class="erphpshowtypes2">点击显示格式</a><br>
+			<fieldset class="erphpurltypes2" style="display: none;border:1px solid #ccc;padding:5px 8px;border-radius: 4px;"><legend>下载地址格式</legend><ol><li>/wp-content/uploads/moban-tu.zip</li><li>https://pan.baidu.com/test</li><li>某某地址,https://pan.baidu.com/test,提取码：2587</li><li>某某地址,https://pan.baidu.com/test</li><li>链接: https://pan.baidu.com/s/test 提取码: xxxx</li></ol>模板兔提示：1是内链，可加密下载地址；3与4格式用英文半角逗号隔开（名称,下载地址,提取码或解压密码），不能有空格；5是<b>网页版百度网盘</b>默认分享格式（名称 下载地址 提取码名称 提取码），英文空格分割</fieldset>
+		</p>
+		<script src="<?php echo ERPHPDOWN_URL;?>/static/jquery.form.js"></script>
+		<script>
+	        jQuery(function($) {
+	        	$(".add-down-url").click(function(){
+		            $(".down-urls").append('<div class="down-url"><input type="number" min="1" step="1" name="down_urls[index][]" placeholder="序号" style="width:8%" required><input type="text" name="down_urls[name][]" placeholder="名称" style="width: 15%" required><input type="number" step="0.01" name="down_urls[price][]" placeholder="价格" style="width: 10%"><div style="display: inline-block;width: 50%;"><textarea name="down_urls[url][]" placeholder="地址" style="width: 100%" rows="2"></textarea><a href="javascript:;" class="erphp-add-url button">上传媒体库文件</a> <a href="javascript:;" class="erphp-add-url2 button button-primary">上传本地文件</a> <span></span></div><select name="down_urls[vip][]" style="display:inline-block;"><option value="0">VIP默认优惠</option><option value="1">无</option><option value="4">VIP专享</option><option value="15">包季VIP专享</option><option value="8">年费VIP专享</option><option value="9">终身VIP专享</option><option value="3">VIP免费</option><option value="16">包季VIP免费</option><option value="6">年费VIP免费</option><option value="7">终身VIP免费</option><option value="2">VIP 5折</option><option value="5">VIP 8折</option><option value="13">VIP 5折|终身免费</option><option value="14">VIP 8折|终身免费</option><option value="10">VIP专享购买</option><option value="11">专享购买|年费5折</option><option value="12">专享购买|年费8折</option></select> <a href="javascript:;" class="del-down-url">删除</a></div>');
+		            return false;
+		        });
+
+		        $(document).on("click",".del-down-url",function(){
+		            $(this).parent().remove();
+		        });
+
+                $(document).on('click', '.erphp-add-url', function(e) {
+                    e.preventDefault();
+                    var button = $(this);
+                    var id = button.prev();
+                    var original_send = wp.media.editor.send.attachment;
+                    wp.media.editor.send.attachment = function(props, attachment) {
+                        if($.trim(id.val()) != ''){
+							id.val(id.val()+'\n'+attachment.url);
+						}else{
+							id.val(attachment.url);
+						}
+						wp.media.editor.send.attachment = original_send;
+                    };
+                    wp.media.editor.open(button);
+                    return false;
+                });
+
+	            $(document).on("click", ".erphp-add-url2", function(){
+	            	var button = $(this);
+                    var id = button.prev().prev();
+                    $("body").append('<form style="display:none" id="erphpFileForm" action="<?php echo ERPHPDOWN_URL;?>/admin/action/file.php" enctype="multipart/form-data" method="post"><input type="file" id="erphpFile" name="erphpFile"></form>');
+                    $("#erphpFile").trigger('click');
+                    $("#erphpFile").change(function(){
+                        $("#erphpFileForm").ajaxSubmit({
+                        	dataType:  'json',
+                            uploadProgress: function(event, position, total, percentComplete) {
+                                button.next().text(percentComplete+'%');
+                            },
+                            success: function(data) {
+                                $('#erphpFileForm').remove();
+                                if($.trim(id.val()) != ''){
+                                	id.val(id.val()+'\n'+data.link);
+                                }else{
+                                    id.val(data.link);
                                 }
+                            },
+                            error:function(xhr){
+                                $('#erphpFileForm').remove();
+                                alert('上传失败！');
                             }
-                        }
-                        $downMsgFree .= '<div id="download-block_63eb4f17be4f6" class="nice-block-download border border-light rounded-md p-4 my-3 my-md-4">
-						<div class="block-download-inner d-flex flex-fill">
-						  <div class="block-download-icon flex-shrink-0 me-3 me-lg-4 mr-3 mr-lg-4">
-							<div class="btn btn-primary btn-icon btn-lg btn-rounded-md">
-							  <span>
-								<i class="svg-blocks svg-baidu-line"></i>
-							  </span>
-							</div>
-						  </div>
-						  <div class="block-download-body flex-fill">
-							<div class="block-download-content d-md-flex align-items-md-center flex-md-fill">';
-                        $MsgFreeTitle = '';
-                        if (strpos($filepath, ',')) {
-                            $filearr = explode(',', $filepath);
-                            $arrlength = count($filearr);
-                            if ($arrlength == 1) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>文件" . ($k + 1) . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filepath . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '';
-                            } elseif ($arrlength == 2) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>" . $filearr[0] . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filearr[1] . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '';
-                            } elseif ($arrlength == 3) {
-                                $filearr2 = str_replace('：', ': ', $filearr[2]);
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>" . $filearr[0] . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filearr[1] . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '<span class="text-muted">' . $filearr2 . '</span><a class="erphpdown-copy" data-clipboard-text="' . str_replace('提取码: ', '', $filearr2) . '" href="javascript:;">复制</a>';
-                            }
-                        } elseif (strpos($filepath, '  ') && $erphp_blank_domain_is) {
-                            $filearr = explode('  ', $filepath);
-                            $arrlength = count($filearr);
-                            if ($arrlength == 1) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>文件" . ($k + 1) . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filepath . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '';
-                            } elseif ($arrlength >= 2) {
-                                $filearr2 = explode(':', $filearr[0]);
-                                $filearr3 = explode(':', $filearr[1]);
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>" . $filearr2[0] . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . trim($filearr2[1] . ':' . $filearr2[2]) . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '<span class="text-muted">提取码: </span><span class="font-theme">' . trim($filearr3[1]) . '</span><a class="erphpdown-copy" data-clipboard-text="' . trim($filearr3[1]) . '" href="javascript:;">复制</a>';
-                            }
-                        } elseif (strpos($filepath, ' ') && $erphp_blank_domain_is) {
-                            $filearr = explode(' ', $filepath);
-                            $arrlength = count($filearr);
-                            if ($arrlength == 1) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>文件" . ($k + 1) . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filepath . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '';
-                            } elseif ($arrlength == 2) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>" . $filearr[0] . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filearr[1] . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '';
-                            } elseif ($arrlength >= 3) {
-                                $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>" . str_replace(':', '', $filearr[0]) . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filearr[1] . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                                $MsgFreeTitle = '<span class="text-muted">' . $filearr[2] . '</span><span class="font-theme">' . $filearr[3] . '</span><a class="erphpdown-copy" data-clipboard-text="' . $filearr[3] . '" href="javascript:;">复制</a>';
-
-                            }
-                        } else {
-                            $downMsgFree .= "<div class='flex-fill h5 mr-0 mr-md-4 me-0 me-md-4 mb-0'>文件" . ($k + 1) . "</div><div class='flex-shrink-0 mt-3 mt-md-0'><a href='" . $filepath . "' rel='nofollow' target='_blank' class='btn btn-dark btn-sm btn-w-md btn-rounded'>下载</a></div>";
-                        }
-                        $downMsgFree .= '</div><div class="block-download-desc text-secondary text-sm mt-3"> 描述 </div>
-						<div class="block-download-data text-sm border-top border-light pt-3 mt-3">
-						  <span class="item-download-data d-inline-block me-2 me-md-4 mr-2 mr-md-4">
-							<span class="text-muted">类型：</span>
-							<span class="">文件类型</span>
-						  </span>
-						  <span class="item-download-data d-inline-block me-2 me-md-4 mr-2 mr-md-4">
-							<span class="text-muted">大小：</span>
-							<span class="font-theme">15MB</span>
-						  </span>
-						  <span class="item-download-data d-inline-block">
-							' . $MsgFreeTitle . '
-						  </span>
-						</div>
-					  </div>
-					</div>
-				  </div>';
-                    }
-                }
-
-                $downMsgFree .= '</div>
-
-					';
-                if (get_option('ice_tips_free')) $downMsgFree .= '<div class="timer" data-countdown="">
-				<div class="timer-in">
-				  <div class="timer-title">' . get_option('ice_tips_free') . '</div>
-				  <div class="timer-time" data-countdown-time="3600">
-					<div class="timer-item"><span data-countdown-hours="">0</span>h</div>
-					<div class="timer-item"><span data-countdown-minutes="">59</span>米</div>
-					<div class="timer-item"><span data-countdown-seconds="">48</span>s</div>
-				  </div>
-				</div>
-			  </div>';
-                if ($start_down2 || $start_down) {
-                    /*$downMsgFree .= '<div class="h4 mb-3">付费资源</div>';*/
-                    /*$downMsgFree .= '<div class="h4 mb-3">请选择版本：</div>';*/
-                }
-            }
-
-            if ($start_down2) {
-                $downMsg = '';
-                if ($url) {
-                    if (function_exists('epd_check_pan_callback')) {
-                        if (strpos($url, 'pan.baidu.com') !== false || (strpos($url, 'lanzou') !== false && strpos($url, '.com') !== false) || strpos($url, 'cloud.189.cn') !== false) {
-                            $down_checkpan = '<a class="erphpdown-buy erphpdown-checkpan2" href="javascript:;" data-id="' . get_the_ID() . '" data-post="' . get_the_ID() . '">点击检测网盘有效后购买</a>';
-                        }
-                    }
-
-                    $content .= '<fieldset class="erphpdown erphpdown-default" id="erphpdown"><legend>资源下载</legend>' . $downMsgFree;
-
-                    $user_id = is_user_logged_in() ? wp_get_current_user()->ID : 0;
-                    $wppay = new EPD(get_the_ID(), $user_id);
-
-                    if ($wppay->isWppayPaid() || $wppay->isWppayPaidNew() || !$price || ($memberDown == 3 && $userType) || ($memberDown == 16 && $userType >= 8) || ($memberDown == 6 && $userType >= 9) || ($memberDown == 7 && $userType >= 10)) {
-                        $downList = explode("\r\n", trim($url));
-                        foreach ($downList as $k => $v) {
-                            $filepath = trim($downList[$k]);
-                            if ($filepath) {
-
-                                if ($erphp_colon_domains) {
-                                    $erphp_colon_domains_arr = explode(',', $erphp_colon_domains);
-                                    foreach ($erphp_colon_domains_arr as $erphp_colon_domain) {
-                                        if (strpos($filepath, $erphp_colon_domain)) {
-                                            $filepath = str_replace('：', ': ', $filepath);
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                $erphp_blank_domain_is = 0;
-                                if ($erphp_blank_domains) {
-                                    $erphp_blank_domains_arr = explode(',', $erphp_blank_domains);
-                                    foreach ($erphp_blank_domains_arr as $erphp_blank_domain) {
-                                        if (strpos($filepath, $erphp_blank_domain)) {
-                                            $erphp_blank_domain_is = 1;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (strpos($filepath, ',')) {
-                                    $filearr = explode(',', $filepath);
-                                    $arrlength = count($filearr);
-                                    if ($arrlength == 1) {
-                                        $downMsg .= "<div class='erphpdown-item'>文件" . ($k + 1) . "地址<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                    } elseif ($arrlength == 2) {
-                                        $downMsg .= "<div class='erphpdown-item'>" . $filearr[0] . "<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                    } elseif ($arrlength == 3) {
-                                        $filearr2 = str_replace('：', ': ', $filearr[2]);
-                                        $downMsg .= "<div class='erphpdown-item'>" . $filearr[0] . "<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a>（" . $filearr2 . "）<a class='erphpdown-copy' data-clipboard-text='" . str_replace('提取码: ', '', $filearr2) . "' href='javascript:;'>复制</a></div>";
-                                    }
-                                } elseif (strpos($filepath, '  ') && $erphp_blank_domain_is) {
-                                    $filearr = explode('  ', $filepath);
-                                    $arrlength = count($filearr);
-                                    if ($arrlength == 1) {
-                                        $downMsg .= "<div class='erphpdown-item'>文件" . ($k + 1) . "地址<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                    } elseif ($arrlength >= 2) {
-                                        $filearr2 = explode(':', $filearr[0]);
-                                        $filearr3 = explode(':', $filearr[1]);
-                                        $downMsg .= "<div class='erphpdown-item'>" . $filearr2[0] . "<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a>（提取码: " . trim($filearr3[1]) . "）<a class='erphpdown-copy' data-clipboard-text='" . trim($filearr3[1]) . "' href='javascript:;'>复制</a></div>";
-                                    }
-                                } elseif (strpos($filepath, ' ') && $erphp_blank_domain_is) {
-                                    $filearr = explode(' ', $filepath);
-                                    $arrlength = count($filearr);
-                                    if ($arrlength == 1) {
-                                        $downMsg .= "<div class='erphpdown-item'>文件" . ($k + 1) . "地址<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                    } elseif ($arrlength == 2) {
-                                        $downMsg .= "<div class='erphpdown-item'>" . $filearr[0] . "<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                    } elseif ($arrlength >= 3) {
-                                        $downMsg .= "<div class='erphpdown-item'>" . str_replace(':', '', $filearr[0]) . "<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a>（" . $filearr[2] . ' ' . $filearr[3] . "）<a class='erphpdown-copy' data-clipboard-text='" . $filearr[3] . "' href='javascript:;'>复制</a></div>";
-                                    }
-                                } else {
-                                    $downMsg .= "<div class='erphpdown-item'>文件" . ($k + 1) . "地址<a href='" . ERPHPDOWN_URL . "/download.php?postid=" . get_the_ID() . "&key=" . ($k + 1) . "&nologin=1' target='_blank' class='erphpdown-down'>点击下载</a></div>";
-                                }
-                            }
-                        }
-                        $content .= $downMsg;
-                        if ($hidden) {
-                            $content .= '<div class="erphpdown-item">提取码：' . $hidden . ' <a class="erphpdown-copy" data-clipboard-text="' . $hidden . '" href="javascript:;">复制</a></div>';
-                        }
-                    } else {
-                        if ($url) {
-                            $tname = '资源下载';
-                        } else {
-                            $tname = '内容查看';
-                        }
-                        if ($memberDown == 3 || $memberDown == 16 || $memberDown == 6 || $memberDown == 7) {
-                            $wppay_vip_name = $erphp_vip_name;
-                            if ($memberDown == 16) {
-                                $wppay_vip_name = $erphp_quarter_name;
-                            } elseif ($memberDown == 6) {
-                                $wppay_vip_name = $erphp_year_name;
-                            } elseif ($memberDown == 7) {
-                                $wppay_vip_name = $erphp_life_name;
-                            }
-
-                            if ($down_checkpan) $content .= $tname . '价格<span class="erphpdown-price">' . $price . '</span>元' . $down_checkpan . '&nbsp;&nbsp;<b>或</b>&nbsp;&nbsp;升级' . $wppay_vip_name . '后免费<a href="' . $erphp_url_front_vip2 . '" target="_blank" class="erphpdown-vip' . (is_user_logged_in() ? '' : ' erphp-login-must') . '">升级' . $wppay_vip_name . '</a>';
-                            else $content .= $tname . '价格<span class="erphpdown-price">' . $price . '</span>元<a href="javascript:;" class="erphp-wppay-loader erphpdown-buy" data-post="' . get_the_ID() . '">立即购买</a>&nbsp;&nbsp;<b>或</b>&nbsp;&nbsp;升级' . $wppay_vip_name . '后免费<a href="' . $erphp_url_front_vip2 . '" target="_blank" class="erphpdown-vip' . (is_user_logged_in() ? '' : ' erphp-login-must') . '">升级' . $wppay_vip_name . '</a>';
-                        } else {
-                            if ($down_checkpan) $content .= $tname . '价格<span class="erphpdown-price">' . $price . '</span>元' . $down_checkpan;
-                            else $content .= $tname . '价格<span class="erphpdown-price">' . $price . '</span>元<a href="javascript:;" class="erphp-wppay-loader erphpdown-buy" data-post="' . get_the_ID() . '">立即购买</a>';
-                        }
-                    }
-
-                    if (get_option('ice_tips')) $content .= '<div class="erphpdown-tips">' . get_option('ice_tips') . '</div>';
-                    $content .= '</fieldset>';
-                }
-
-            } elseif ($start_down) {
-
-                $tuanHtml = '';
-                $content .= '<div class="h3 mx-1 mt-5 mb-2 mb-md-3">软件下载</div><div class="card card-md">
-				<div class="card-body"><!--<div class="h4 mb-3">请选择版本：</div>--><div class="row row-cols-1 row-cols-md-3 row-cols-xl-3 g-4 g-md-4">';
-                if ($down_tuan == '2' && function_exists('erphpdown_tuan_install')) {
-                    $tuanHtml = erphpdown_tuan_html();
-                    $content .= $tuanHtml;
-                } else {
-                    if ($price_type) {
-
-                        if ($urls) {
-
-                            $cnt = count($urls);
-                            if ($cnt) {
-                                for ($i = 0; $i < $cnt; $i++) {
-                                    $index = $urls[$i]['index'];
-                                    $index_name = $urls[$i]['name'];
-                                    $price = $urls[$i]['price'];
-                                    $index_url = $urls[$i]['url'];
-                                    $index_vip = $urls[$i]['vip'];
-
-                                    $indexMemberDown = $memberDown;
-                                    if ($index_vip) {
-                                        $indexMemberDown = $index_vip;
-                                    }
-
-                                    $product_tag = '';
-                                    $product_name = '';
-                                    $product_ver = '';
-                                    $product_desc = '';
-                                    $alt_name = '';
-
-                                    $fields = explode('-', $index_name);
-
-                                    if (count($fields) == 4) {
-                                        $product_info = [
-                                            'tag' => $fields[0],
-                                            'name' => $fields[1],
-                                            'version' => $fields[2],
-                                            'desc' => $fields[3]
-                                        ];
-
-
-                                        if (!empty($product_info['tag'])) {
-                                            $product_tag = '<span class="product-image-label">' . $product_info['tag'] . '</span>';
-                                        }
-                                        if (!empty($product_info['version'])) {
-                                            $product_ver = $product_info['version'];
-                                        }
-                                        if (!empty($product_info['name'])) {
-                                            $product_name = '<div class="product-item-name h4 mb-2">' . $product_info['name'] . '<span class="font-number ms-2">' . $product_ver . '</span></div>';
-                                            $alt_name = $product_info['name'];
-                                        }
-                                        if (!empty($product_info['desc'])) {
-                                            $product_desc = '<div class="product-item-description text-secondary">' . $product_info['desc'] . '</div>';
-                                        }
-
-                                    } else {
-                                        $product_name = '<div class="product-item-name h4 mb-2">' . $index_name . '</div>';
-                                        $alt_name = $index_name;
-                                    }
-
-                                    $content .= '<div class="col d-flex">
-    <div class="product-item flex-fill" data-checkout-type-trigger="subscription">
-        <div class="product-image">
-            <img src="https://cdn2.macpaw.com/images/ec1c2519a9f7f02df7b657eb7aed9397.png" alt="' . $alt_name . '">
-            ' . $product_tag . '
-        </div>
-        ' . $product_name . '
-        ' . $product_desc . '
-';
-
-
-                                    $down_checkpan = '';
-                                    if (function_exists('epd_check_pan_callback')) {
-                                        if (strpos($index_url, 'pan.baidu.com') !== false || (strpos($index_url, 'lanzou') !== false && strpos($index_url, '.com') !== false) || strpos($index_url, 'cloud.189.cn') !== false) {
-                                            $down_checkpan = '<a class="erphpdown-buy erphpdown-checkpan" href="javascript:;" data-id="' . get_the_ID() . '" data-index="' . $index . '" data-buy="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . '">点击检测网盘有效后购买</a>';
-                                        }
-                                    }
-
-                                    if (is_user_logged_in()) {
-                                        if ($price) {
-                                            if ($indexMemberDown != 4 && $indexMemberDown != 15 && $indexMemberDown != 8 && $indexMemberDown != 9)
-                                                $content .= '<div class="product-item-price-wrapper d-none"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div>';
-                                        } else {
-                                            if ($indexMemberDown != 4 && $indexMemberDown != 15 && $indexMemberDown != 8 && $indexMemberDown != 9)
-                                                $content .= '此资源为免费资源';
-                                        }
-
-                                        if ($price || $indexMemberDown == 4 || $indexMemberDown == 15 || $indexMemberDown == 8 || $indexMemberDown == 9) {
-                                            $user_info = wp_get_current_user();
-                                            $down_info = $wpdb->get_row("select * from " . $wpdb->icealipay . " where ice_post='" . get_the_ID() . "' and ice_index='" . $index . "' and ice_success=1 and ice_user_id=" . $user_info->ID . " order by ice_time desc");
-                                            if ($days > 0 && $down_info) {
-                                                $lastDownDate = date('Y-m-d H:i:s', strtotime('+' . $days . ' day', strtotime($down_info->ice_time)));
-                                                $nowDate = date('Y-m-d H:i:s');
-                                                if (strtotime($nowDate) > strtotime($lastDownDate)) {
-                                                    $down_info = null;
-                                                }
-                                            }
-
-                                            if ($down_repeat) {
-                                                $down_info_repeat = $down_info;
-                                                $down_info = null;
-                                            }
-
-                                            $buyText = '立即购买';
-                                            if ($down_repeat && $down_info_repeat && !$down_info) {
-                                                $buyText = '再次购买';
-                                            }
-
-                                            if (($userType && ($indexMemberDown == 3 || $indexMemberDown == 4)) || $down_info || (($indexMemberDown == 15 || $indexMemberDown == 16) && $userType >= 8) || (($indexMemberDown == 6 || $indexMemberDown == 8) && $userType >= 9) || (($indexMemberDown == 7 || $indexMemberDown == 9 || $indexMemberDown == 13 || $indexMemberDown == 14) && $userType == 10) || (!$price && $indexMemberDown != 4 && $indexMemberDown != 15 && $indexMemberDown != 8 && $indexMemberDown != 9)) {
-
-                                                if ($indexMemberDown == 3) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 2) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 5折）</div>';
-                                                } elseif ($indexMemberDown == 13) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 5) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 899折）</div>';
-                                                } elseif ($indexMemberDown == 14) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 866折、' . $erphp_life_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 16) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_quarter_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 6) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_year_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 7) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_life_name . '免费）</div>';
-                                                } elseif ($indexMemberDown == 4) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_vip_name . '下载）</div>';
-                                                } elseif ($indexMemberDown == 15) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_quarter_name . '下载）</div>';
-                                                } elseif ($indexMemberDown == 8) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_year_name . '下载）</div>';
-                                                } elseif ($indexMemberDown == 9) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_life_name . '下载）</div>';
-                                                } elseif ($indexMemberDown == 10) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买）</div>';
-                                                } elseif ($indexMemberDown == 11) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）</div>';
-                                                } elseif ($indexMemberDown == 12) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）</div>';
-                                                }
-
-                                                $content .= "<input type='hidden' name='erphpdown-down' data-class=" . $erphp_popdown . " data-title='立即下载' data-url='" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . "&index=" . $index . $iframe . "' data-target='_blank'>";
-                                            } else {
-
-
-                                                $vipText = '<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                if ($userType) {
-                                                    $vipText = '';
-                                                    if (($indexMemberDown == 13 || $indexMemberDown == 14) && $userType < 10) {
-                                                        $vipText = '<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_life_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                }
-
-                                                if ($indexMemberDown == 3) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 2) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 5折）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 13) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 5) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 866折）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 14) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_vip_name . ' 866折、' . $erphp_life_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 16) {
-                                                    if ($userType < 8) {
-                                                        $vipText = '<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_quarter_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_quarter_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 6) {
-                                                    if ($userType < 9) {
-                                                        $vipText = '<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_year_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_year_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 7) {
-                                                    if ($userType < 10) {
-                                                        $vipText = '<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_life_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（' . $erphp_life_name . '免费）</div>' . $vipText;
-                                                } elseif ($indexMemberDown == 4) {
-                                                    if ($userType) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源为' . $erphp_vip_name . '专享资源）</div>';
-                                                    }
-                                                } elseif ($indexMemberDown == 15) {
-                                                    if ($userType >= 9) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源为' . $erphp_quarter_name . '专享资源）</div>';
-                                                    }
-                                                } elseif ($indexMemberDown == 8) {
-                                                    if ($userType >= 9) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源为' . $erphp_year_name . '专享资源）</div>';
-                                                    }
-                                                } elseif ($indexMemberDown == 9) {
-                                                    if ($userType >= 10) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源为' . $erphp_life_name . '专享资源）</div>';
-                                                    }
-                                                }
-
-
-                                                if ($indexMemberDown == 4) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_vip_name . '下载）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                } elseif ($indexMemberDown == 15) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_quarter_name . '下载）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_quarter_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                } elseif ($indexMemberDown == 8) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_year_name . '下载）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_year_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                } elseif ($indexMemberDown == 9) {
-                                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_life_name . '下载）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_life_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                } elseif ($indexMemberDown == 10) {
-                                                    if ($userType) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买）</div>';
-                                                        if ($down_checkpan) $content .= $down_checkpan;
-                                                        else $content .= '<input type="hidden" name="erphpdown-buy" data-class="erphpdown-iframe" data-title="' . $buyText . '" data-url="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . '" data-target="_blank">';
-
-                                                        if ($days) {
-                                                            $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（购买后' . $days . '天内可下载）</div>';
-                                                        }
-                                                    } else {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-
-                                                    }
-                                                } elseif ($indexMemberDown == 11) {
-                                                    if ($userType) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）</div>';
-                                                        if ($down_checkpan) $content .= $down_checkpan;
-                                                        else $content .= '<input type="hidden" name="erphpdown-buy" data-class="erphpdown-iframe" data-title="' . $buyText . '" data-url="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . '" data-target="_blank">';
-
-                                                        if ($days) {
-                                                            $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（购买后' . $days . '天内可下载）</div>';
-                                                        }
-                                                    } else {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                } elseif ($indexMemberDown == 12) {
-                                                    if ($userType) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）</div>';
-                                                        if ($down_checkpan) $content .= $down_checkpan;
-                                                        else $content .= '<input type="hidden" name="erphpdown-buy" data-class="erphpdown-iframe" data-title="' . $buyText . '" data-url="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . '" data-target="_blank">';
-
-                                                        if ($days) {
-                                                            $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（购买后' . $days . '天内可下载）</div>';
-                                                        }
-                                                    } else {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）</div><input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                                    }
-                                                } else {
-                                                    if ($down_checkpan) $content .= $down_checkpan;
-                                                    else $content .= '<input type="hidden" name="erphpdown-buy" data-class="erphpdown-iframe" data-title="' . $buyText . '" data-url="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . '" data-target="_blank">';
-
-                                                    if ($days) {
-                                                        $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（购买后' . $days . '天内可下载）</div>';
-                                                    }
-                                                }
-
-                                            }
-
-                                        } else {
-                                            $content .= "<input type='hidden' name='erphpdown-down' data-class=" . $erphp_popdown . " data-title='立即下载' data-url='" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . "&index=" . $index . $iframe . "' data-target='_blank'>";
-                                        }
-
-                                    } else {
-                                        if ($indexMemberDown == 4 || $indexMemberDown == 15 || $indexMemberDown == 8 || $indexMemberDown == 9) {
-                                            $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限' . $erphp_vip_name . '下载）</div><input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                                        } else {
-                                            if ($price) {
-                                                $content .= '<div class="product-item-price-wrapper d-none"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div><input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                                            } else {
-                                                $content .= '此资源为免费资源<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                                            }
-                                        }
-                                    }
-                                    if (get_option('erphp_repeatdown_btn') && $down_repeat && $down_info_repeat && !$down_info) {
-
-                                        $content .= '<input type="hidden" name="erphpdown-down" data-class=' . $erphp_popdown . ' data-title="立即下载" data-url="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '&index=' . $index . $iframe . '" data-target="_blank">';
-                                    }
-                                    $content .= '
-									<div class="product-item-check mt-auto"><input type="radio" class="form-check-input" name="checkout-onetime"></div></div></div>';
-                                }
-                            }
-                        }
-                    } else {
-                        if (function_exists('erphpdown_tuan_install')) {
-                            $tuanHtml = erphpdown_tuan_html();
-                        }
-
-                        if (function_exists('epd_check_pan_callback')) {
-                            if (strpos($url, 'pan.baidu.com') !== false || (strpos($url, 'lanzou') !== false && strpos($url, '.com') !== false) || strpos($url, 'cloud.189.cn') !== false) {
-                                $down_checkpan = '<a class="erphpdown-buy erphpdown-checkpan" href="javascript:;" data-id="' . get_the_ID() . '" data-index="0" data-buy="' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '">点击检测网盘有效后购买</a>';
-                            }
-                        }
-                        if (is_user_logged_in()) {
-                            if ($price) {
-                                if ($memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)
-                                    $content .= '<div class="product-item-price-wrapper"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</span></div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div>';
-                            } else {
-                                if ($memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)
-                                    $content .= '<div class="product-item-discount text-xs text-muted mt-1 mt-md-2" data-product-discount>（此资源仅限注册用户下载）</div>';
-                            }
-
-                            if ($price || $memberDown == 4 || $memberDown == 15 || $memberDown == 8 || $memberDown == 9) {
-                                $user_info = wp_get_current_user();
-                                $down_info = $wpdb->get_row("select * from " . $wpdb->icealipay . " where ice_post='" . get_the_ID() . "' and ice_success=1 and (ice_index is null or ice_index = '') and ice_user_id=" . $user_info->ID . " order by ice_time desc");
-                                if ($days > 0 && $down_info) {
-                                    $lastDownDate = date('Y-m-d H:i:s', strtotime('+' . $days . ' day', strtotime($down_info->ice_time)));
-                                    $nowDate = date('Y-m-d H:i:s');
-                                    if (strtotime($nowDate) > strtotime($lastDownDate)) {
-                                        $down_info = null;
-                                    }
-                                }
-
-                                if ($down_repeat) {
-                                    $down_info_repeat = $down_info;
-                                    $down_info = null;
-                                }
-
-                                $buyText = '立即购买';
-                                if ($down_repeat && $down_info_repeat && !$down_info) {
-                                    $buyText = '再次购买';
-                                }
-
-                                $user_id = $user_info->ID;
-                                $wppay = new EPD(get_the_ID(), $user_id);
-
-                                if (($userType && ($memberDown == 3 || $memberDown == 4)) || (($wppay->isWppayPaid() || $wppay->isWppayPaidNew()) && !$down_repeat) || $down_info || (($memberDown == 15 || $memberDown == 16) && $userType >= 8) || (($memberDown == 6 || $memberDown == 8) && $userType >= 9) || (($memberDown == 7 || $memberDown == 9 || $memberDown == 13 || $memberDown == 14) && $userType == 10) || (!$price && $memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)) {
-
-                                    if ($memberDown == 3) {
-                                        $content .= '（' . $erphp_vip_name . '免费）';
-                                    } elseif ($memberDown == 2) {
-                                        $content .= '（' . $erphp_vip_name . ' 5折）';
-                                    } elseif ($memberDown == 13) {
-                                        $content .= '（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）';
-                                    } elseif ($memberDown == 5) {
-                                        $content .= '（' . $erphp_vip_name . ' 899折）';
-                                    } elseif ($memberDown == 14) {
-                                        $content .= '（' . $erphp_vip_name . ' 866折、' . $erphp_life_name . '免费）';
-                                    } elseif ($memberDown == 16) {
-                                        $content .= '（' . $erphp_quarter_name . '免费）';
-                                    } elseif ($memberDown == 6) {
-                                        $content .= '（' . $erphp_year_name . '免费）';
-                                    } elseif ($memberDown == 7) {
-                                        $content .= '（' . $erphp_life_name . '免费）';
-                                    } elseif ($memberDown == 4) {
-                                        $content .= '（此资源仅限' . $erphp_vip_name . '下载）';
-                                    } elseif ($memberDown == 15) {
-                                        $content .= '（此资源仅限' . $erphp_quarter_name . '下载）';
-                                    } elseif ($memberDown == 8) {
-                                        $content .= '（此资源仅限' . $erphp_year_name . '下载）';
-                                    } elseif ($memberDown == 9) {
-                                        $content .= '（此资源仅限' . $erphp_life_name . '下载）';
-                                    } elseif ($memberDown == 10) {
-                                        $content .= '（仅限' . $erphp_vip_name . '购买）';
-                                    } elseif ($memberDown == 11) {
-                                        $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）';
-                                    } elseif ($memberDown == 12) {
-                                        $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）';
-                                    }
-
-                                    $content .= "<a href=" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . $iframe . " class='erphpdown-down" . $erphp_popdown . "' target='_blank'>立即下载</a>";
-
-                                } else {
-
-                                    $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_vip_name . '</a>';
-                                    if ($userType) {
-                                        $vipText = '';
-                                        if (($memberDown == 13 || $memberDown == 14) && $userType < 10) {
-                                            $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                                        }
-                                    }
-                                    if ($memberDown == 3) {
-                                        $content .= '（' . $erphp_vip_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 2) {
-                                        $content .= '（' . $erphp_vip_name . ' 5折）' . $vipText;
-                                    } elseif ($memberDown == 13) {
-                                        $content .= '（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 5) {
-                                        $content .= '（' . $erphp_vip_name . ' 899折）' . $vipText;
-                                    } elseif ($memberDown == 14) {
-                                        $content .= '（' . $erphp_vip_name . ' 866折、' . $erphp_life_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 16) {
-                                        if ($userType < 8) {
-                                            $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                                        }
-                                        $content .= '（' . $erphp_quarter_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 6) {
-                                        if ($userType < 9) {
-                                            $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                                        }
-                                        $content .= '（' . $erphp_year_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 7) {
-                                        if ($userType < 10) {
-                                            $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                                        }
-                                        $content .= '（' . $erphp_life_name . '免费）' . $vipText;
-                                    } elseif ($memberDown == 4) {
-                                        if ($userType) {
-                                            $content .= '此资源为' . $erphp_vip_name . '专享资源';
-                                        }
-                                    } elseif ($memberDown == 15) {
-                                        if ($userType >= 9) {
-                                            $content .= '此资源为' . $erphp_quarter_name . '专享资源';
-                                        }
-                                    } elseif ($memberDown == 8) {
-                                        if ($userType >= 9) {
-                                            $content .= '此资源为' . $erphp_year_name . '专享资源';
-                                        }
-                                    } elseif ($memberDown == 9) {
-                                        if ($userType >= 10) {
-                                            $content .= '此资源为' . $erphp_life_name . '专享资源';
-                                        }
-                                    }
-
-
-                                    if ($memberDown == 4) {
-                                        $content .= '此资源仅限' . $erphp_vip_name . '下载<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                    } elseif ($memberDown == 15) {
-                                        $content .= '此资源仅限' . $erphp_quarter_name . '下载<a href="' . $erphp_url_front_vip . '" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                                    } elseif ($memberDown == 8) {
-                                        $content .= '此资源仅限' . $erphp_year_name . '下载<a href="' . $erphp_url_front_vip . '" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                                    } elseif ($memberDown == 9) {
-                                        $content .= '此资源仅限' . $erphp_life_name . '下载<a href="' . $erphp_url_front_vip . '" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                                    } elseif ($memberDown == 10) {
-                                        if ($userType) {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买）';
-                                            if ($down_checkpan) $content .= $down_checkpan;
-                                            else $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">' . $buyText . '</a>';
-
-                                            if ($days) {
-                                                $content .= '（购买后' . $days . '天内可下载）';
-                                            }
-                                        } else {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                        }
-                                    } elseif ($memberDown == 11) {
-                                        if ($userType) {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）';
-                                            if ($down_checkpan) $content .= $down_checkpan;
-                                            else $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">' . $buyText . '</a>';
-
-                                            if ($days) {
-                                                $content .= '（购买后' . $days . '天内可下载）';
-                                            }
-                                        } else {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                        }
-                                    } elseif ($memberDown == 12) {
-                                        if ($userType) {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）';
-                                            if ($down_checkpan) $content .= $down_checkpan;
-                                            else $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">' . $buyText . '</a>';
-
-                                            if ($days) {
-                                                $content .= '（购买后' . $days . '天内可下载）';
-                                            }
-                                        } else {
-                                            $content .= '（仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 899折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                                        }
-                                    } else {
-
-                                        if ($down_checkpan) $content .= $down_checkpan;
-                                        else $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">' . $buyText . '</a>';
-
-                                        if ($days) {
-                                            $content .= '（购买后' . $days . '天内可下载）';
-                                        }
-                                    }
-                                }
-
-                            } else {
-                                $content .= "<a href=" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . $iframe . " class='erphpdown-down" . $erphp_popdown . "' target='_blank'>立即下载</a>";
-                            }
-
-                        } else {
-                            if ($memberDown == 4) {
-                                $content .= '此资源仅限' . $erphp_vip_name . '下载，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 15) {
-                                $content .= '此资源仅限' . $erphp_quarter_name . '下载，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 8) {
-                                $content .= '此资源仅限' . $erphp_year_name . '下载，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 9) {
-                                $content .= '此资源仅限' . $erphp_life_name . '下载，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 10) {
-                                $content .= '此资源仅限' . $erphp_vip_name . '购买，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 11) {
-                                $content .= '此资源仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } elseif ($memberDown == 12) {
-                                $content .= '此资源仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 866折，请先<input type="hidden" name="erphp-login-must" data-title="登录" data-url="' . $erphp_url_front_login . '" data-target="_blank">';
-                            } else {
-                                $vip_content = '';
-                                if ($memberDown == 3) {
-                                    $vip_content .= '，' . $erphp_vip_name . '免费';
-                                } elseif ($memberDown == 2) {
-                                    $vip_content .= '，' . $erphp_vip_name . ' 5折';
-                                } elseif ($memberDown == 13) {
-                                    $vip_content .= '，' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费';
-                                } elseif ($memberDown == 5) {
-                                    $vip_content .= '，' . $erphp_vip_name . ' 866折';
-                                } elseif ($memberDown == 14) {
-                                    $vip_content .= '，' . $erphp_vip_name . ' 866折、' . $erphp_life_name . '免费';
-                                } elseif ($memberDown == 16) {
-                                    $vip_content .= '，' . $erphp_quarter_name . '免费';
-                                } elseif ($memberDown == 6) {
-                                    $vip_content .= '，' . $erphp_year_name . '免费';
-                                } elseif ($memberDown == 7) {
-                                    $vip_content .= '，' . $erphp_life_name . '免费';
-                                }
-
-                                if (get_option('erphp_wppay_down')) {
-                                    $user_id = 0;
-                                    $wppay = new EPD(get_the_ID(), $user_id);
-                                    if ($wppay->isWppayPaid() || $wppay->isWppayPaidNew()) {
-                                        if ($price) {
-                                            $content .= '此资源下载价格为<div class="product-item-price-wrapper"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div>';
-                                        }
-                                        $content .= "<a href=" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . $iframe . " class='erphpdown-down" . $erphp_popdown . "' target='_blank'>立即下载</a>";
-                                    } else {
-                                        if ($price) {
-                                            $content .= '此资源下载价格为<div class="product-item-price-wrapper"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div>';
-
-                                            if ($down_checkpan) $content .= $down_checkpan;
-                                            else $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                            $content .= $vip_content ? ($vip_content . '<a href="' . $erphp_url_front_login . '" target="_blank" class="erphpdown-vip erphp-login-must">立即升级</a>') : '';
-                                        } else {
-                                            if (!get_option('erphp_free_login')) {
-                                                $content .= "此资源为免费资源<a href=" . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . $iframe . " class='erphpdown-down" . $erphp_popdown . "' target='_blank'>立即下载</a>";
-                                            } else {
-                                                $content .= '此资源仅限注册用户下载，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if ($price) {
-                                        $content .= '此资源下载价格为<div class="product-item-price-wrapper"><div class="product-item-price" data-price=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div><div class="product-item-price-full" data-price-full=""><span class="niceeeeee">' . get_option('ice_name_alipay') . '</span>' . $price . '</div></div>' . $vip_content . '，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                                    } else {
-                                        $content .= '此资源仅限注册用户下载，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                                    }
-
-                                }
-                            }
-                        }
-
-                        if (get_option('erphp_repeatdown_btn') && $down_repeat && $down_info_repeat && !$down_info) {
-                            $content .= '<a href=' . constant("erphpdown") . 'download.php?postid=' . get_the_ID() . $iframe . ' class="erphpdown-down' . $erphp_popdown . '" target="_blank">立即下载</a>';
-                        }
-
-                    }
-                    $content .= '</div>';
-                    if (get_option('ice_tips')) $content .= '<div class="timer" data-countdown="">
-					<div class="timer-in">
-					  <div class="timer-title">' . get_option('ice_tips') . '</div>
-					  <div class="timer-time" data-countdown-time="3600">
-						<div class="timer-item"><span data-countdown-hours="">0</span>h</div>
-						<div class="timer-item"><span data-countdown-minutes="">59</span>米</div>
-						<div class="timer-item"><span data-countdown-seconds="">48</span>s</div>
-					  </div>
-					</div>
-				  </div>';
-
-                    $content .= $tuanHtml;
-                }
-                $content .= '<div class="checkout-in" data-checkout-block="subscription" data-checkout="cleanmypc">
-				<div class="row">
-				  <div class="col-12 col-md-12 col-lg-6 col-xxl-7">
-					<div class="checkout-info text-sm text-secondary">
-					  <div class="checkout-info-item">
-						<div class="checkout-info-item-in">
-						<i class="text-xl iconfont icon-read"></i>
-						  <div class="checkout-info-text">详尽的使用教程</div>
-						</div>
-					  </div>
-					  <div class="checkout-info-item">
-						<div class="checkout-info-item-in">
-						<i class="text-xl iconfont icon-cloud-sync"></i>
-						  <div class="checkout-info-text">免费更新、维护</div>
-						</div>
-					  </div>
-					</div>
-					<div class="checkout-info text-sm text-secondary">
-					  <div class="checkout-info-item">
-						<div class="checkout-info-item-in">
-						<i class="text-xl iconfont icon-customerservice"></i>
-						  <div class="checkout-info-text"> 24X7 技术和销售支持 </div>
-						</div>
-					  </div>
-					  <div class="checkout-info-item">
-						<div class="checkout-info-item-in">
-						<i class="text-xl iconfont icon-retweet"></i>
-						  <div class="checkout-info-text">安全支付加密</div>
-						</div>
-					  </div>
-					</div>
-				  </div>
-				  <div class="col-12 col-md-12 col-lg-6 col-xxl-5">
-					<div class="checkout-purchase">
-					  <div class="checkout-purchase-name text-sm text-secondary mb-2">当先选择： <span data-name></span>
-					  </div>
-					  <div class="checkout-purchase-cta">
-					  <div class="button-container">
-					  </div>
-					  </div>
-					  <div class="checkout-pay">
-						<div class="checkout-pay-icons">
-						  <img src="https://cdn2.macpaw.com/images/store/pay-visa.svg?id=0e1ea75c79ae0d2cd30f0b17d7f1e8f8" width="28" alt="">
-						  <img src="https://cdn2.macpaw.com/images/store/pay-ms.svg?id=63a6c0d9dd6f1366489d4ab046ed4cfd" width="28" alt="">
-						  <img src="https://cdn2.macpaw.com/images/store/pay-amex.svg?id=42c420d0330782cd12a836449559433e" width="28" alt="">
-						</div>
-						<div class="checkout-pay-price text-sm text-muted">
-						<span data-price-full></span><span data-checkout-discount></span>
-						</div>
-
-					  </div>
-					</div>
-				  </div>
-				</div>
-			  </div></div>
-				</div>';
-
-            } elseif ($start_see) {
-
-                if (is_user_logged_in()) {
-                    $user_info = wp_get_current_user();
-                    $down_info = $wpdb->get_row("select * from " . $wpdb->icealipay . " where ice_post='" . get_the_ID() . "' and ice_success=1 and (ice_index is null or ice_index = '') and ice_user_id=" . $user_info->ID . " order by ice_time desc");
-                    if ($days > 0 && $down_info) {
-                        $lastDownDate = date('Y-m-d H:i:s', strtotime('+' . $days . ' day', strtotime($down_info->ice_time)));
-                        $nowDate = date('Y-m-d H:i:s');
-                        if (strtotime($nowDate) > strtotime($lastDownDate)) {
-                            $down_info = null;
-                        }
-                    }
-
-                    $user_id = $user_info->ID;
-                    $wppay = new EPD(get_the_ID(), $user_id);
-
-                    if (($userType && ($memberDown == 3 || $memberDown == 4)) || $wppay->isWppayPaid() || $wppay->isWppayPaidNew() || $down_info || (($memberDown == 15 || $memberDown == 16) && $userType >= 8) || (($memberDown == 6 || $memberDown == 8) && $userType >= 9) || (($memberDown == 7 || $memberDown == 9 || $memberDown == 13 || $memberDown == 14) && $userType == 10) || (!$price && $memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)) {
-                        return $content;
-                    } else {
-
-                        $content2 = '<fieldset class="erphpdown erphpdown-default erphpdown-see" id="erphpdown"><legend>内容查看</legend>';
-                        if ($price) {
-                            if ($memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9) {
-                                $content2 .= '此内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay');
-                            }
-                        }
-
-                        $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_vip_name . '</a>';
-                        if ($userType) {
-                            $vipText = '';
-                            if (($memberDown == 13 || $memberDown == 14) && $userType < 10) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                            }
-                        }
-                        if ($memberDown == 3) {
-                            $content2 .= '（' . $erphp_vip_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 2) {
-                            $content2 .= '（' . $erphp_vip_name . ' 5折）' . $vipText;
-                        } elseif ($memberDown == 13) {
-                            $content2 .= '（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 5) {
-                            $content2 .= '（' . $erphp_vip_name . ' 8折）' . $vipText;
-                        } elseif ($memberDown == 14) {
-                            $content2 .= '（' . $erphp_vip_name . ' 8折、' . $erphp_life_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 16) {
-                            if ($userType < 8) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                            }
-                            $content2 .= '（' . $erphp_quarter_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 6) {
-                            if ($userType < 9) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                            }
-                            $content2 .= '（' . $erphp_year_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 7) {
-                            if ($userType < 10) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                            }
-                            $content2 .= '（' . $erphp_life_name . '免费）' . $vipText;
-                        }
-
-                        if ($memberDown == 4) {
-                            $content2 .= '此内容仅限' . $erphp_vip_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_vip_name . '</a>';
-                        } elseif ($memberDown == 15) {
-                            $content2 .= '此内容仅限' . $erphp_quarter_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                        } elseif ($memberDown == 8) {
-                            $content2 .= '此内容仅限' . $erphp_year_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                        } elseif ($memberDown == 9) {
-                            $content2 .= '此内容仅限' . $erphp_life_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                        } elseif ($memberDown == 10) {
-                            if ($userType) {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                if ($days) {
-                                    $content2 .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } elseif ($memberDown == 11) {
-                            if ($userType) {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 5折）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                if ($days) {
-                                    $content2 .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 5折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } elseif ($memberDown == 12) {
-                            if ($userType) {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 8折）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                if ($days) {
-                                    $content2 .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content2 .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 8折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } else {
-                            $content2 .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '>立即购买</a>';
-
-                            if ($days) {
-                                $content2 .= '（购买后' . $days . '天内可查看）';
-                            }
-                        }
-                    }
-
-                } else {
-                    $content2 = '<fieldset class="erphpdown erphpdown-default erphpdown-see" id="erphpdown"><legend>内容查看</legend>';
-
-                    if ($memberDown == 4) {
-                        $content2 .= '此内容仅限' . $erphp_vip_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 15) {
-                        $content2 .= '此内容仅限' . $erphp_quarter_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 8) {
-                        $content2 .= '此内容仅限' . $erphp_year_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 9) {
-                        $content2 .= '此内容仅限' . $erphp_life_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 10) {
-                        $content2 .= '此内容仅限' . $erphp_vip_name . '购买，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 11) {
-                        $content2 .= '此内容仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 12) {
-                        $content2 .= '此内容仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 8折，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } else {
-                        $vip_content = '';
-                        if ($memberDown == 3) {
-                            $vip_content .= '，' . $erphp_vip_name . '免费';
-                        } elseif ($memberDown == 2) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 5折';
-                        } elseif ($memberDown == 13) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费';
-                        } elseif ($memberDown == 5) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 8折';
-                        } elseif ($memberDown == 14) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 8折、' . $erphp_life_name . '免费';
-                        } elseif ($memberDown == 16) {
-                            $vip_content .= '，' . $erphp_quarter_name . '免费';
-                        } elseif ($memberDown == 6) {
-                            $vip_content .= '，' . $erphp_year_name . '免费';
-                        } elseif ($memberDown == 7) {
-                            $vip_content .= '，' . $erphp_life_name . '免费';
-                        }
-
-                        if (get_option('erphp_wppay_down')) {
-                            $user_id = is_user_logged_in() ? wp_get_current_user()->ID : 0;
-                            $wppay = new EPD(get_the_ID(), $user_id);
-                            if ($wppay->isWppayPaid() || $wppay->isWppayPaidNew()) {
-                                return $content;
-                            } else {
-                                if ($price) {
-                                    $content2 .= '此内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay');
-                                    $content2 .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                    $content2 .= $vip_content ? ($vip_content . '<a href="' . $erphp_url_front_login . '" target="_blank" class="erphpdown-vip erphp-login-must">立即升级</a>') : '';
-                                } else {
-                                    if (!get_option('erphp_free_login')) {
-                                        return $content;
-                                    } else {
-                                        $content2 .= '此内容仅限注册用户查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                                    }
-                                }
-                            }
-                        } else {
-                            if ($price) {
-                                $content2 .= '此内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay') . $vip_content . '，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                            } else {
-                                $content2 .= '此内容仅限注册用户查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                            }
-
-                        }
-                    }
-
-                }
-                if (get_option('ice_tips')) $content2 .= '<div class="erphpdown-tips">' . get_option('ice_tips') . '</div>';
-                $content2 .= '</fieldset>';
-                return $content2;
-
-            } elseif ($start_see2 && $erphp_see2_style) {
-
-                if (is_user_logged_in()) {
-                    $user_info = wp_get_current_user();
-                    $down_info = $wpdb->get_row("select * from " . $wpdb->icealipay . " where ice_post='" . get_the_ID() . "' and ice_success=1 and (ice_index is null or ice_index = '') and ice_user_id=" . $user_info->ID . " order by ice_time desc");
-                    if ($days > 0 && $down_info) {
-                        $lastDownDate = date('Y-m-d H:i:s', strtotime('+' . $days . ' day', strtotime($down_info->ice_time)));
-                        $nowDate = date('Y-m-d H:i:s');
-                        if (strtotime($nowDate) > strtotime($lastDownDate)) {
-                            $down_info = null;
-                        }
-                    }
-                    if (($userType && ($memberDown == 3 || $memberDown == 4)) || $down_info || (($memberDown == 15 || $memberDown == 16) && $userType >= 8) || (($memberDown == 6 || $memberDown == 8) && $userType >= 9) || (($memberDown == 7 || $memberDown == 9 || $memberDown == 13 || $memberDown == 14) && $userType == 10) || (!$price && $memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)) {
-
-                    } else {
-
-                        $content .= '<fieldset class="erphpdown erphpdown-default erphpdown-see" id="erphpdown"><legend>内容查看</legend>';
-                        if ($price) {
-                            if ($memberDown != 4 && $memberDown != 15 && $memberDown != 8 && $memberDown != 9)
-                                $content .= '本文隐藏内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay');
-                        }
-
-
-                        $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_vip_name . '</a>';
-                        if ($userType) {
-                            $vipText = '';
-                            if (($memberDown == 13 || $memberDown == 14) && $userType < 10) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                            }
-                        }
-                        if ($memberDown == 3) {
-                            $content .= '（' . $erphp_vip_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 2) {
-                            $content .= '（' . $erphp_vip_name . ' 5折）' . $vipText;
-                        } elseif ($memberDown == 13) {
-                            $content .= '（' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 5) {
-                            $content .= '（' . $erphp_vip_name . ' 8折）' . $vipText;
-                        } elseif ($memberDown == 14) {
-                            $content .= '（' . $erphp_vip_name . ' 8折、' . $erphp_life_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 16) {
-                            if ($userType < 9) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                            }
-                            $content .= '（' . $erphp_quarter_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 6) {
-                            if ($userType < 9) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                            }
-                            $content .= '（' . $erphp_year_name . '免费）' . $vipText;
-                        } elseif ($memberDown == 7) {
-                            if ($userType < 10) {
-                                $vipText = '<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                            }
-                            $content .= '（' . $erphp_life_name . '免费）' . $vipText;
-                        }
-
-                        if ($memberDown == 4) {
-                            $content .= '本文隐藏内容仅限' . $erphp_vip_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_vip_name . '</a>';
-                        } elseif ($memberDown == 15) {
-                            $content .= '本文隐藏内容仅限' . $erphp_quarter_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_quarter_name . '</a>';
-                        } elseif ($memberDown == 8) {
-                            $content .= '本文隐藏内容仅限' . $erphp_year_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_year_name . '</a>';
-                        } elseif ($memberDown == 9) {
-                            $content .= '本文隐藏内容仅限' . $erphp_life_name . '查看<a href="' . $erphp_url_front_vip . '" target="_blank" class="erphpdown-vip">升级' . $erphp_life_name . '</a>';
-                        } elseif ($memberDown == 10) {
-                            if ($userType) {
-                                $content .= '（仅限' . $erphp_vip_name . '购买）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                if ($days) {
-                                    $content .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content .= '（仅限' . $erphp_vip_name . '购买）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } elseif ($memberDown == 11) {
-                            if ($userType) {
-                                $content .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 5折）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-                                if ($days) {
-                                    $content .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 5折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } elseif ($memberDown == 12) {
-                            if ($userType) {
-                                $content .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 8折）<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                if ($days) {
-                                    $content .= '（购买后' . $days . '天内可查看）';
-                                }
-                            } else {
-                                $content .= '（仅限' . $erphp_vip_name . '购买，' . $erphp_year_name . ' 8折）<input type="hidden" name="erphpdown-vip" data-title="升级' . $erphp_vip_name . '" data-url="' . $erphp_url_front_vip . '" data-target="_blank">';
-                            }
-                        } else {
-
-                            $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . '>立即购买</a>';
-                            if ($days) {
-                                $content .= '（购买后' . $days . '天内可查看）';
-                            }
-                        }
-
-                        if (get_option('ice_tips')) $content .= '<div class="erphpdown-tips">' . get_option('ice_tips') . '</div>';
-                        $content .= '</fieldset>';
-                    }
-
-                } else {
-                    $content .= '<fieldset class="erphpdown erphpdown-default erphpdown-see" id="erphpdown"><legend>内容查看</legend>';
-
-                    if ($memberDown == 4) {
-                        $content .= '本文隐藏内容仅限' . $erphp_vip_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 15) {
-                        $content .= '本文隐藏内容仅限' . $erphp_quarter_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 8) {
-                        $content .= '本文隐藏内容仅限' . $erphp_year_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 9) {
-                        $content .= '本文隐藏内容仅限' . $erphp_life_name . '查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 10) {
-                        $content .= '本文隐藏内容仅限' . $erphp_vip_name . '购买，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 11) {
-                        $content .= '本文隐藏内容仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 5折，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } elseif ($memberDown == 12) {
-                        $content .= '本文隐藏内容仅限' . $erphp_vip_name . '购买、' . $erphp_year_name . ' 8折，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                    } else {
-                        $vip_content = '';
-                        if ($memberDown == 3) {
-                            $vip_content .= '，' . $erphp_vip_name . '免费';
-                        } elseif ($memberDown == 2) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 5折';
-                        } elseif ($memberDown == 13) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 5折、' . $erphp_life_name . '免费';
-                        } elseif ($memberDown == 5) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 8折';
-                        } elseif ($memberDown == 14) {
-                            $vip_content .= '，' . $erphp_vip_name . ' 8折、' . $erphp_life_name . '免费';
-                        } elseif ($memberDown == 16) {
-                            $vip_content .= '，' . $erphp_quarter_name . '免费';
-                        } elseif ($memberDown == 6) {
-                            $vip_content .= '，' . $erphp_year_name . '免费';
-                        } elseif ($memberDown == 7) {
-                            $vip_content .= '，' . $erphp_life_name . '免费';
-                        }
-
-                        if (get_option('erphp_wppay_down')) {
-                            $user_id = is_user_logged_in() ? wp_get_current_user()->ID : 0;
-                            $wppay = new EPD(get_the_ID(), $user_id);
-                            if ($wppay->isWppayPaid() || $wppay->isWppayPaidNew()) {
-                                return '';
-                            } else {
-                                if ($price) {
-                                    $content .= '本文隐藏内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay');
-                                    $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-
-                                    $content .= $vip_content ? ($vip_content . '<a href="' . $erphp_url_front_login . '" target="_blank" class="erphpdown-vip erphp-login-must">立即升级</a>') : '';
-                                } else {
-                                    if (!get_option('erphp_free_login')) {
-                                        return '';
-                                    } else {
-                                        $content .= '此内容仅限注册用户查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                                    }
-                                }
-                            }
-                        } else {
-                            if ($price) {
-                                $content .= '本文隐藏内容查看价格为<span class="erphpdown-price">' . $price . '</span>' . get_option('ice_name_alipay') . $vip_content . '，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                            } else {
-                                $content .= '本文隐藏内容仅限注册用户查看，请先<a href="' . $erphp_url_front_login . '" target="_blank" class="erphp-login-must">登录</a>';
-                            }
-
-                        }
-                    }
-                    if (get_option('ice_tips')) $content .= '<div class="erphpdown-tips">' . get_option('ice_tips') . '</div>';
-                    $content .= '</fieldset>';
-                }
-
-                return $content;
-
-            } elseif ($erphp_down == 6) {
-                $content .= '<fieldset class="erphpdown erphpdown-default" id="erphpdown"><legend>自动发卡</legend>';
-                $content .= '此卡密价格为<span class="erphpdown-price">' . $price . '</span>' . get_option("ice_name_alipay");
-                $content .= '<a class="erphpdown-iframe erphpdown-buy" href=' . constant("erphpdown") . 'buy.php?postid=' . get_the_ID() . ' target="_blank">立即购买</a>';
-                if (function_exists('getErphpActLeft')) $content .= '（库存：' . getErphpActLeft(get_the_ID()) . '）';
-                $content .= '</fieldset>';
-            } else {
-                if ($downMsgFree) $content .= '<fieldset class="erphpdown erphpdown-default" id="erphpdown"><legend>资源下载</legend>' . $downMsgFree . '</fieldset>';
-            }
-
-        } else {
-            $start_see = get_post_meta(get_the_ID(), 'start_see', true);
-            if ($start_see) {
-                return '';
-            }
-        }
-    }
-
-
+                        });
+
+                    });
+                    return false;
+                });
+
+                $(".erphpshowtypes2").click(function(){
+	            	if($(this).hasClass('active')){
+	            		$(".erphpurltypes2").hide();
+	            	}else{
+	            		$(".erphpurltypes2").show();
+	            	}
+	            	$(this).toggleClass("active");
+	            });
+
+	        });
+	    </script>
+	</div>
+	<?php
+}
+
+function erphpdown_show_checkbox( $args = array(), $value = false ) {
+	extract( $args ); ?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+		<input type="checkbox" name="<?php echo $name; ?>" id="<?php echo $name; ?>" value="1"
+		<?php if ( htmlentities( $value, 1 ) == '1' ) echo ' checked="checked"'; ?>
+		style="width: auto;" />
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<p class="description"><?php echo $desc; ?></p>
+	</div>
+<?php }
+
+function erphpdown_show_downradio( $args = array(), $value = false ) {
+	extract( $args );
+	global $post, $pagenow;
+	$value1 = get_post_meta( $post->ID, 'start_down', true );
+	$value2 = get_post_meta( $post->ID, 'start_see', true );
+	$value3 = get_post_meta( $post->ID, 'start_see2', true );
+	$value5 = get_post_meta( $post->ID, 'start_down2', true );
+	?>
+	<div class="erphpdown-metabox-item">
+		<label class="title"><?php echo $title; ?></label>
+
+		<?php if($pagenow === 'post-new.php'){?>
+		<input type="radio" name="erphp_down" id="erphp_down4" <?php if($default == '4') echo 'checked'?> value="4" /><label for="erphp_down4">不启用</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down1" <?php if($default == '1') echo 'checked'?> value="1" /><label for="erphp_down1">下载</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down2" <?php if($default == '2') echo 'checked'?> value="2" class="noprice"/><label for="erphp_down2">查看</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down3" <?php if($default == '3') echo 'checked'?> value="3" class="noprice"/><label for="erphp_down3">部分查看</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down5" <?php if($default == '5') echo 'checked'?> value="5" class="nologin noprice"/><label for="erphp_down5">免登录（老版本）</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down6" <?php if($default == '6') echo 'checked'?> value="6" class="noprice novip"/><label for="erphp_down6">发卡</label> &nbsp;
+		<?php }else{?>
+		<input type="radio" name="erphp_down" id="erphp_down4" checked value="4" /><label for="erphp_down4">不启用</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down1" <?php if($value1 == 'yes') echo 'checked'?> value="1" /><label for="erphp_down1">下载</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down2" <?php if($value2 == 'yes') echo 'checked'?> value="2" class="noprice"/><label for="erphp_down2">查看</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down3" <?php if($value3 == 'yes') echo 'checked'?> value="3" class="noprice"/><label for="erphp_down3">部分查看</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down5" <?php if($value5 == 'yes') echo 'checked'?> value="5" class="nologin noprice"/><label for="erphp_down5">免登录（老版本）</label> &nbsp;
+		<input type="radio" name="erphp_down" id="erphp_down6" <?php if($value == '6') echo 'checked'?> value="6" class="noprice novip"/><label for="erphp_down6">发卡</label> &nbsp;
+		<?php }?>
+
+		<input type="hidden" name="erphpdown" value="1">
+		<input type="hidden" name="<?php echo $name; ?>_input_name" id="<?php echo $name; ?>_input_name" value="<?php echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" />
+		<p class="description"><?php echo $desc; ?></p>
+
+	</div>
+<?php }
+
+
+add_action( 'admin_menu', 'erphpdown_create_metabox' );
+add_action( 'save_post', 'erphpdown_save_metabox' );
+
+function erphpdown_create_metabox() {
+	$erphp_post_types = get_option('erphp_post_types');
+	$args = array(
+		'public'   => true,
+	);
+	$post_types = get_post_types($args);
+	foreach ( $post_types  as $post_type ) {
+		if($erphp_post_types){
+			if(in_array($post_type,$erphp_post_types)) add_meta_box( 'erphpdown-postmeta-box','Erphpdown属性', 'erphpdown_show_metabox', $post_type, 'normal', 'high' );
+		}
+	}
+
+}
+
+function erphpdown_save_metabox( $post_id ) {
+
+	if(!isset($_POST['erphpdown']))
+		return;
+
+	$meta_boxes = array_merge( erphpdown_metaboxs() );
+	foreach ( $meta_boxes as $meta_box ) :
+		if($meta_box['type'] == 'downradio'){
+
+			if (!wp_verify_nonce( $_POST[$meta_box['name'] . '_input_name'], plugin_basename( __FILE__ ) ))
+				return $post_id;
+
+			if(isset($_POST['erphp_down'])){
+				$data = stripslashes( $_POST['erphp_down'] );
+				$data1 = '';$data2='';$data3='';$data5='';
+				if($data == '1'){
+					$data1 = 'yes';
+					update_post_meta( $post_id, 'start_down', 'yes' );
+					delete_post_meta( $post_id, 'start_down2');
+					delete_post_meta( $post_id, 'start_see');
+					delete_post_meta( $post_id, 'start_see2');
+				}elseif($data == '2'){
+					$data2 = 'yes';
+					update_post_meta( $post_id, 'start_see', 'yes' );
+					delete_post_meta( $post_id, 'start_down2');
+					delete_post_meta( $post_id, 'start_down');
+					delete_post_meta( $post_id, 'start_see2');
+				}elseif($data == '3'){
+					$data2 = 'yes';
+					update_post_meta( $post_id, 'start_see2', 'yes' );
+					delete_post_meta( $post_id, 'start_down2');
+					delete_post_meta( $post_id, 'start_down');
+					delete_post_meta( $post_id, 'start_see');
+				}elseif($data == '5'){
+					$data2 = 'yes';
+					update_post_meta( $post_id, 'start_down2', 'yes' );
+					delete_post_meta( $post_id, 'start_see');
+					delete_post_meta( $post_id, 'start_down');
+					delete_post_meta( $post_id, 'start_see2');
+				}else{
+					delete_post_meta( $post_id, 'start_down');
+					delete_post_meta( $post_id, 'start_down2');
+					delete_post_meta( $post_id, 'start_see');
+					delete_post_meta( $post_id, 'start_see2');
+				}
+				update_post_meta( $post_id, $meta_box['name'], $data );
+			}
+		}else{
+			if (!wp_verify_nonce( $_POST[$meta_box['name'] . '_input_name'], plugin_basename( __FILE__ ) ))
+				return $post_id;
+
+			if(isset($_POST[$meta_box['name']])){
+	            update_post_meta($post_id, $meta_box['name'], $_POST[$meta_box['name']]);
+	        }else{
+	            delete_post_meta($post_id, $meta_box['name']);
+	        }
+		}
+
+
+	endforeach;
+}
